@@ -1,0 +1,25 @@
+html, body {
+  font-family: Arial, sans-serif;
+  height: 100%;
+  margin: 5px;
+  padding: 0px;
+}
+
+#places { 
+    height: 600px;
+}
+#mapdiv {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  height: 100%;
+  width: 83.33%;
+  padding: 0px;
+}
+#map {
+  height: 100%;
+}
+
+#placelist{
+  list-style-type: none;
+}

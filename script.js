@@ -1,0 +1,106 @@
+//function initMap() {
+//model to store all the location data. this could come from a JSON file or from a database.
+var all_locations = [
+  {title: 'Park Ave Penthouse', location: {lat: 40.7713024, lng: -73.9932459}},
+  {title: 'Chelsea Loft', location: {lat: 40.7444883, lng: -73.9949465}},
+  {title: 'Union Square Open Floor Plan', location: {lat: 40.7347062, lng: -73.9895759}},
+  {title: 'East Village Hip Studio', location: {lat: 40.7281777, lng: -73.984377}},
+  {title: 'TriBeCa Artsy Bachelor Pad', location: {lat: 40.7195264, lng: -74.0089934}},
+  {title: 'Chinatown Homey Space', location: {lat: 40.7180628, lng: -73.9961237}}
+];
+
+//creating a map
+var map = new google.maps.Map(document.getElementById('map'), {
+  center: {lat: 40.7413549, lng: -73.9980244},
+  zoom: 13
+});
+
+//creating a location and saving it in Location
+var Location = function(locations_data){
+  this.title = ko.observable(locations_data.title);
+  this.location = ko.observable(locations_data.location);
+  this.marker = new google.maps.Marker({
+    position: locations_data.location,
+    map: map,
+    animation: google.maps.Animation.DROP,
+    title: locations_data.title
+  });
+  this.infoWindow = InfoWindow(this.marker);
+};
+
+function InfoWindow(marker){
+    // Create an onclick event to open an infowindow at each marker.
+    marker.addListener('click', function() {
+      this.infoWindow = new google.maps.InfoWindow();
+      populateInfoWindow(this, this.infoWindow);
+    });
+};
+// This function populates the infowindow when the marker is clicked. We'll only allow
+// one infowindow which will open at the marker that is clicked, and populate based
+// on that markers position.
+
+function populateInfoWindow(marker, infowindow) {
+  // Check to make sure the infowindow is not already opened on this marker.
+  if (infowindow.marker != marker) {
+    infowindow.marker = marker;
+    infowindow.setContent('<div>' + marker.title + '</div>');
+    infowindow.open(map, marker);
+    // Make sure the marker property is cleared if the infowindow is closed.
+    infowindow.addListener('closeclick',function(){
+      infowindow.setMarker(null);
+    });
+  }
+}
+
+//this is the viewmodel
+var ViewModel = function(){
+  //self is ViewModel
+  var self = this;
+
+  //what the user enters is now stored as a ko observable
+  this.query = ko.observable('');
+
+  //creating array of all locations- its blank at first
+  this.locationList = ko.observableArray([]);
+
+  //pushing all the locations to this.LocationList
+  //show all the markers
+  for(var local in all_locations) {
+      self.locationList.push(new Location(all_locations[local]));
+      //new google.maps.Marker(self.locationList()[local].marker);
+  };
+
+  //this is the currentList. It shows only the relevant items
+  this.currentList = ko.computed(function() {
+    var filter = self.query().toLowerCase();
+    //if the input value, i.e. query is blank, then show the locationList that has everything
+    if (!filter) {
+      return self.locationList();
+    } else {
+      //if the input value is not blank then use the filter option provided by knockout to reduce the list to whatever is relevant.
+      //also need to use stringsStartsWith function that has been defined at the top.
+      return ko.utils.arrayFilter(self.locationList(), function(loc) {
+        var loc_title = loc.title().toLowerCase();
+        if (loc_title.search(filter)>=0){
+          loc.marker.setVisible(true);
+          return true;
+        } else {
+          loc.marker.setVisible(false);
+          if (loc.marker.infoWindow) loc.marker.infoWindow.close();
+          return false;
+        };
+      });
+    }
+  }, this);
+
+  //this is just for testing purposes. please disregard this.test
+  this.result_text = ko.computed(function() {
+    return "You are searching for: " + this.query();
+  }, this);
+};
+
+//applying the knnockout bindings so that knockout will listen to the bindings and take actions accordingly
+ko.applyBindings(new ViewModel());
+
+
+//}
