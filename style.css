@@ -6,7 +6,7 @@ html, body {
 
 /* To change the height of the map, change this */
 #mapdiv {
-  height: 600px;
+  height:500px;
 }
 
 #map {

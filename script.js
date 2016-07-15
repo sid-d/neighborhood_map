@@ -1,11 +1,11 @@
 //model to store all the location data. this could come from a JSON file or from a database.
 var all_locations = [
-  {title: 'Park Avenue', location: {lat: 40.7713024, lng: -73.9932459}},
-  {title: 'Chelsea', location: {lat: 40.7444883, lng: -73.9949465}},
-  {title: 'Union Square', location: {lat: 40.7347062, lng: -73.9895759}},
-  {title: 'East Village', location: {lat: 40.7281777, lng: -73.984377}},
+  {title: 'Upper Manhattan', location: {lat: 40.7713024, lng: -73.9932459}},
+  {title: 'Hamilton Heights', location: {lat: 40.7444883, lng: -73.9949465}},
+  {title: 'Upper East Side', location: {lat: 40.7347062, lng: -73.9895759}},
+  {title: 'Central Park', location: {lat: 40.7281777, lng: -73.984377}},
   {title: 'TriBeCa', location: {lat: 40.7195264, lng: -74.0089934}},
-  {title: 'Chinatown', location: {lat: 40.7180628, lng: -73.9961237}}
+  {title: 'New Amsterdam', location: {lat: 40.7180628, lng: -73.9961237}}
 ];
 
 //creating a global variable to store the map and to refernece it later
@@ -41,8 +41,11 @@ function InfoWindow(marker){
   var wikiurl="https://en.wikipedia.org/w/api.php?action=opensearch&search="+ marker.title + "&format=json&callback=wikicallback";
   // Create an onclick event to open an infowindow at each marker.
   marker.addListener('click', function() {
+    this.setAnimation(google.maps.Animation.BOUNCE);
     var self = this;
-    this.infoWindow = new google.maps.InfoWindow();
+    this.infoWindow = new google.maps.InfoWindow({
+      maxWidth: 200
+    });
     $.ajax({
       url: wikiurl,
       dataType: "jsonp",
@@ -51,10 +54,17 @@ function InfoWindow(marker){
                       response[3][0]+
                       '">'+
                       marker.title+
-                      '</a>'
-                      '</div>'+
+                      '</a>'+
+                      '<p>'+
+                      response[2][0]+
+                      '</p>'+
+                      '</div>';
         self.infoWindow.setContent(display);
         self.infoWindow.open(map,self);
+      },
+      error: function(){
+        console.log('There was an error in loading the Wikipedia Articles.');
+        alert("Sorry something is wrong with getting data about this location from Wikipedia.");
       }
     })
   });
