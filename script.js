@@ -1,12 +1,12 @@
 //function initMap() {
 //model to store all the location data. this could come from a JSON file or from a database.
 var all_locations = [
-  {title: 'Park Ave Penthouse', location: {lat: 40.7713024, lng: -73.9932459}},
-  {title: 'Chelsea Loft', location: {lat: 40.7444883, lng: -73.9949465}},
-  {title: 'Union Square Open Floor Plan', location: {lat: 40.7347062, lng: -73.9895759}},
-  {title: 'East Village Hip Studio', location: {lat: 40.7281777, lng: -73.984377}},
-  {title: 'TriBeCa Artsy Bachelor Pad', location: {lat: 40.7195264, lng: -74.0089934}},
-  {title: 'Chinatown Homey Space', location: {lat: 40.7180628, lng: -73.9961237}}
+  {title: 'Park Avenue', location: {lat: 40.7713024, lng: -73.9932459}},
+  {title: 'Chelsea', location: {lat: 40.7444883, lng: -73.9949465}},
+  {title: 'Union Square', location: {lat: 40.7347062, lng: -73.9895759}},
+  {title: 'East Village', location: {lat: 40.7281777, lng: -73.984377}},
+  {title: 'TriBeCa', location: {lat: 40.7195264, lng: -74.0089934}},
+  {title: 'Chinatown', location: {lat: 40.7180628, lng: -73.9961237}}
 ];
 
 //creating a map
@@ -25,32 +25,31 @@ var Location = function(locations_data){
     animation: google.maps.Animation.DROP,
     title: locations_data.title
   });
-  this.infoWindow = InfoWindow(this.marker);
+  InfoWindow(this.marker);
 };
 
 function InfoWindow(marker){
     // Create an onclick event to open an infowindow at each marker.
+    var wikiurl="https://en.wikipedia.org/w/api.php?action=opensearch&search="+ marker.title + "&format=json&callback=wikicallback";
     marker.addListener('click', function() {
+      var self = this;
       this.infoWindow = new google.maps.InfoWindow();
-      populateInfoWindow(this, this.infoWindow);
+      $.ajax({
+        url: wikiurl,
+        dataType: "jsonp",
+        success: function(response){
+          var display = '<div><a href="'+
+                        response[3][0]+
+                        '">'+
+                        marker.title+
+                        '</a>'
+                        '</div>'+
+          self.infoWindow.setContent(display);
+          self.infoWindow.open(map,self);
+        }
+      })
     });
 };
-// This function populates the infowindow when the marker is clicked. We'll only allow
-// one infowindow which will open at the marker that is clicked, and populate based
-// on that markers position.
-
-function populateInfoWindow(marker, infowindow) {
-  // Check to make sure the infowindow is not already opened on this marker.
-  if (infowindow.marker != marker) {
-    infowindow.marker = marker;
-    infowindow.setContent('<div>' + marker.title + '</div>');
-    infowindow.open(map, marker);
-    // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener('closeclick',function(){
-      infowindow.setMarker(null);
-    });
-  }
-}
 
 //this is the viewmodel
 var ViewModel = function(){
@@ -67,7 +66,6 @@ var ViewModel = function(){
   //show all the markers
   for(var local in all_locations) {
       self.locationList.push(new Location(all_locations[local]));
-      //new google.maps.Marker(self.locationList()[local].marker);
   };
 
   //this is the currentList. It shows only the relevant items
@@ -75,6 +73,9 @@ var ViewModel = function(){
     var filter = self.query().toLowerCase();
     //if the input value, i.e. query is blank, then show the locationList that has everything
     if (!filter) {
+      for(var local in self.locationList()) {
+        self.locationList()[local].marker.setVisible(true);
+      };
       return self.locationList();
     } else {
       //if the input value is not blank then use the filter option provided by knockout to reduce the list to whatever is relevant.
