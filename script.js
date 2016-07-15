@@ -24,6 +24,7 @@ function initMap(){
 
 //creating a location constructor that will be run to create a location by giving it one location data
 var Location = function(locations_data){
+  var self = this;
   this.title = ko.observable(locations_data.title);
   this.location = ko.observable(locations_data.location);
   this.marker = new google.maps.Marker({
@@ -32,6 +33,11 @@ var Location = function(locations_data){
     animation: google.maps.Animation.DROP,
     title: locations_data.title
   });
+  //animating the marker if clicked on
+  this.showInfo = function(){
+    self.marker.setAnimation(google.maps.Animation.BOUNCE);
+  }
+  //adrawing the infowindow
   InfoWindow(this.marker);
 };
 
@@ -46,6 +52,7 @@ function InfoWindow(marker){
     this.infoWindow = new google.maps.InfoWindow({
       maxWidth: 200
     });
+    //making an ajax call to get the wkipedia articles and display that in the infowindow
     $.ajax({
       url: wikiurl,
       dataType: "jsonp",
@@ -62,6 +69,7 @@ function InfoWindow(marker){
         self.infoWindow.setContent(display);
         self.infoWindow.open(map,self);
       },
+      //if anyerror occurs handling it gracefully
       error: function(){
         console.log('There was an error in loading the Wikipedia Articles.');
         alert("Sorry something is wrong with getting data about this location from Wikipedia.");
