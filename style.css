@@ -1,25 +1,19 @@
 html, body {
   font-family: Arial, sans-serif;
-  height: 100%;
   margin: 5px;
-  padding: 0px;
+  padding: 5px;
 }
 
-#places { 
-    height: 600px;
-}
+/* To change the height of the map, change this */
 #mapdiv {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  height: 100%;
-  width: 83.33%;
-  padding: 0px;
+  height: 600px;
 }
+
 #map {
   height: 100%;
 }
 
+/* This is so that list of places don't have bullets next to them. */
 #placelist{
   list-style-type: none;
 }

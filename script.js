@@ -1,4 +1,3 @@
-//function initMap() {
 //model to store all the location data. this could come from a JSON file or from a database.
 var all_locations = [
   {title: 'Park Avenue', location: {lat: 40.7713024, lng: -73.9932459}},
@@ -9,13 +8,21 @@ var all_locations = [
   {title: 'Chinatown', location: {lat: 40.7180628, lng: -73.9961237}}
 ];
 
-//creating a map
-var map = new google.maps.Map(document.getElementById('map'), {
-  center: {lat: 40.7413549, lng: -73.9980244},
-  zoom: 13
-});
+//creating a global variable to store the map and to refernece it later
+var map;
 
-//creating a location and saving it in Location
+//after google map api javascript loads this function is going to run automatically
+function initMap(){
+  //this actually creates a map
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: 40.7413549, lng: -73.9980244},
+    zoom: 13
+  });
+  //applying the knnockout bindings so that knockout will listen to the bindings and take actions accordingly
+  ko.applyBindings(new ViewModel());
+}
+
+//creating a location constructor that will be run to create a location by giving it one location data
 var Location = function(locations_data){
   this.title = ko.observable(locations_data.title);
   this.location = ko.observable(locations_data.location);
@@ -28,46 +35,44 @@ var Location = function(locations_data){
   InfoWindow(this.marker);
 };
 
+//to create an infowindow based on the marker supplied.
 function InfoWindow(marker){
-    // Create an onclick event to open an infowindow at each marker.
-    var wikiurl="https://en.wikipedia.org/w/api.php?action=opensearch&search="+ marker.title + "&format=json&callback=wikicallback";
-    marker.addListener('click', function() {
-      var self = this;
-      this.infoWindow = new google.maps.InfoWindow();
-      $.ajax({
-        url: wikiurl,
-        dataType: "jsonp",
-        success: function(response){
-          var display = '<div><a href="'+
-                        response[3][0]+
-                        '">'+
-                        marker.title+
-                        '</a>'
-                        '</div>'+
-          self.infoWindow.setContent(display);
-          self.infoWindow.open(map,self);
-        }
-      })
-    });
+  //wikipedia link will be saved according to the marker's title
+  var wikiurl="https://en.wikipedia.org/w/api.php?action=opensearch&search="+ marker.title + "&format=json&callback=wikicallback";
+  // Create an onclick event to open an infowindow at each marker.
+  marker.addListener('click', function() {
+    var self = this;
+    this.infoWindow = new google.maps.InfoWindow();
+    $.ajax({
+      url: wikiurl,
+      dataType: "jsonp",
+      success: function(response){
+        var display = '<div><a href="'+
+                      response[3][0]+
+                      '">'+
+                      marker.title+
+                      '</a>'
+                      '</div>'+
+        self.infoWindow.setContent(display);
+        self.infoWindow.open(map,self);
+      }
+    })
+  });
 };
 
 //this is the viewmodel
 var ViewModel = function(){
   //self is ViewModel
   var self = this;
-
   //what the user enters is now stored as a ko observable
   this.query = ko.observable('');
-
   //creating array of all locations- its blank at first
   this.locationList = ko.observableArray([]);
-
   //pushing all the locations to this.LocationList
   //show all the markers
   for(var local in all_locations) {
       self.locationList.push(new Location(all_locations[local]));
   };
-
   //this is the currentList. It shows only the relevant items
   this.currentList = ko.computed(function() {
     var filter = self.query().toLowerCase();
@@ -93,15 +98,8 @@ var ViewModel = function(){
       });
     }
   }, this);
-
-  //this is just for testing purposes. please disregard this.test
+  //shows you what you are typing.
   this.result_text = ko.computed(function() {
     return "You are searching for: " + this.query();
   }, this);
 };
-
-//applying the knnockout bindings so that knockout will listen to the bindings and take actions accordingly
-ko.applyBindings(new ViewModel());
-
-
-//}
