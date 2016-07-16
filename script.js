@@ -36,45 +36,40 @@ var Location = function(locations_data){
   //animating the marker if clicked on
   this.showInfo = function(){
     self.marker.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(function(){self.marker.setAnimation(null); }, 1400);
+    google.maps.event.trigger(self.marker, 'click');
   }
-  //adrawing the infowindow
+  //drawing the infowindow
   InfoWindow(this.marker);
 };
 
 //to create an infowindow based on the marker supplied.
 function InfoWindow(marker){
   //wikipedia link will be saved according to the marker's title
-  var wikiurl="https://en.wikipedia.org/w/api.php?action=opensearch&search="+ marker.title + "&format=json&callback=wikicallback";
+  var wikiurl='https://en.wikipedia.org/w/api.php?action=opensearch&search='+ marker.title + '&format=json&callback=wikicallback';
   // Create an onclick event to open an infowindow at each marker.
   marker.addListener('click', function() {
     this.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(function(){marker.setAnimation(null); }, 1400);
     var self = this;
     this.infoWindow = new google.maps.InfoWindow({
       maxWidth: 200
     });
     //making an ajax call to get the wkipedia articles and display that in the infowindow
     $.ajax({
+    // ajax settings
       url: wikiurl,
-      dataType: "jsonp",
-      success: function(response){
-        var display = '<div><a href="'+
-                      response[3][0]+
-                      '">'+
-                      marker.title+
-                      '</a>'+
-                      '<p>'+
-                      response[2][0]+
-                      '</p>'+
-                      '</div>';
+      dataType: "jsonp"
+      }).done(function (response) {
+        // successful
+        var display = '<div><a href="'+response[3][0]+'">'+marker.title+'</a>'+'<p>'+response[2][0]+'</p>'+'</div>';
         self.infoWindow.setContent(display);
         self.infoWindow.open(map,self);
-      },
-      //if anyerror occurs handling it gracefully
-      error: function(){
+      }).fail(function (jqXHR, textStatus) {
+        // error handling
         console.log('There was an error in loading the Wikipedia Articles.');
         alert("Sorry something is wrong with getting data about this location from Wikipedia.");
-      }
-    })
+    });
   });
 };
 
@@ -88,17 +83,17 @@ var ViewModel = function(){
   this.locationList = ko.observableArray([]);
   //pushing all the locations to this.LocationList
   //show all the markers
-  for(var local in all_locations) {
-      self.locationList.push(new Location(all_locations[local]));
-  };
+  all_locations.forEach(function(local){
+    self.locationList.push(new Location(local));
+  });
   //this is the currentList. It shows only the relevant items
   this.currentList = ko.computed(function() {
     var filter = self.query().toLowerCase();
     //if the input value, i.e. query is blank, then show the locationList that has everything
     if (!filter) {
-      for(var local in self.locationList()) {
-        self.locationList()[local].marker.setVisible(true);
-      };
+      self.locationList().forEach(function(local){
+        local.marker.setVisible(true);
+      });
       return self.locationList();
     } else {
       //if the input value is not blank then use the filter option provided by knockout to reduce the list to whatever is relevant.
@@ -120,4 +115,9 @@ var ViewModel = function(){
   this.result_text = ko.computed(function() {
     return "You are searching for: " + this.query();
   }, this);
+};
+
+//creating a function that runs when google maps fails to load
+var googleError = function(){
+  alert("Google Map failed to load");
 };
